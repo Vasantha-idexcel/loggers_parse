@@ -1,0 +1,14 @@
+{
+  "name": "loggers-parse",
+  "version": "1.0.0",
+  "main": "arc/app.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "command-line-args": "^5.2.1",
+    "csv-parser": "^3.0.0",
+    "lodash": "^4.17.21"
+  }
+}
