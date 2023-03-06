@@ -1,9 +1,10 @@
 const csv = require("csv-parser");
 const fs = require("fs");
 const _ = require("lodash");
+const multi = require("multistream");
 const commandLineArgs = require("command-line-args");
 const optionDefinitions = [
-  { name: "src", type: String, multiple: false, defaultOption: true },
+  { name: "src", type: String, multiple: true, defaultOption: true },
 ];
 const options = commandLineArgs(optionDefinitions);
 
@@ -23,14 +24,16 @@ function spinner() {
 
 let result = [];
 if (options["src"]) {
-  fs.createReadStream(options["src"])
+  const streams = _.map(options["src"], (i) => {
+    return fs.createReadStream(i);
+  });
+  new multi(streams)
     .pipe(csv())
     .on("data", (data) => {
       result.push([data["scenario_code"], data["sequence"]]);
       spinner();
     })
     .on("end", () => {
-      clearInterval(loader);
       console.log();
       let hash = {};
       let value;
@@ -50,12 +53,13 @@ if (options["src"]) {
         try {
           fs.appendFileSync(
             "./src/loggers_count.csv",
-            `${i},${hash[i].length},"${_.join(hash[i], ",")}"\n`
+            `"${i}",${hash[i].length},"${_.join(hash[i], ",")}"\n`
           );
         } catch (err) {
           console.error(err);
         }
       });
+      clearInterval(loader);
       console.log(`File generated at - ${__dirname}/loggers_count.csv`);
     });
 } else {
