@@ -5,10 +5,14 @@ const multi = require("multistream");
 const commandLineArgs = require("command-line-args");
 const optionDefinitions = [
   { name: "src", type: String, multiple: true, defaultOption: true },
-  { name: "defaults-provided", type: Boolean, multiple: false },
+  { name: "defaults", type: Boolean, multiple: false },
 ];
 const options = commandLineArgs(optionDefinitions);
-const provided = require("./data.json");
+const path = require("path");
+let provided = false;
+try {
+  provided = require("../scenarios.json");
+} catch {}
 
 var loader = null;
 var flag = true;
@@ -47,45 +51,42 @@ if (options["src"]) {
         value = _.concat(value, i[1]);
         hash[i[0]] = _.uniq(value);
       });
-      if (options["defaults-provided"]) {
-        fs.writeFileSync(
-          "./src/loggers_count.csv",
-          `Scenario Code,Logged Count,Missed Count,Logged Sequences,Missed Sequences\n`
-        );
+      if (options["defaults"] && provided) {
+        let total = 0;
+        let total_missed = 0;
         _.forEach(_.keys(hash), (i) => {
-          try {
-            const logged = hash[i];
-            const temp = _.map(provided[i], (i) => _.toString(i));
-            const missed = _.difference(temp, logged);
-            fs.appendFileSync(
-              "./src/loggers_count.csv",
-              `"${i}",${logged.length},${missed.length},"${_.join(
-                logged,
-                ","
-              )}","${_.join(missed, ",")}"\n`
-            );
-          } catch (err) {
-            console.error(err);
-          }
+          const logged = hash[i];
+          const temp = _.map(provided[i], (i) => _.toString(i));
+          const missed = _.difference(temp, logged);
+          hash[i] = {
+            count: logged.length,
+            sequences: logged.sort(),
+            missed_count: missed.length,
+            missed_sequences: missed.sort(),
+          };
+          total += logged.length;
+          total_missed += missed.length;
         });
+        hash["total"] = {
+          logged: total,
+          missed: total_missed,
+        };
       } else {
-        fs.writeFileSync(
-          "./src/loggers_count.csv",
-          `Scenario Code,Count,Sequences\n`
-        );
+        let total = 0;
         _.forEach(_.keys(hash), (i) => {
-          try {
-            fs.appendFileSync(
-              "./src/loggers_count.csv",
-              `"${i}",${hash[i].length},"${_.join(hash[i], ",")}"\n`
-            );
-          } catch (err) {
-            console.error(err);
-          }
+          const value = hash[i];
+          hash[i] = {
+            count: value.length,
+            sequences: value.sort(),
+          };
+          total += value.length;
         });
+        hash["total"] = total;
       }
+      fs.writeFileSync("results.json", JSON.stringify(hash));
       clearInterval(loader);
-      console.log(`File generated at - ${__dirname}/loggers_count.csv`);
+      const pathName = path.join(__dirname, "../results.json");
+      console.log(`File generated at - ${pathName}`);
     });
 } else {
   console.log("Please provide a path for csv file to parse...");
