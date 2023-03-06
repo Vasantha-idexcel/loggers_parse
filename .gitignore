@@ -1,2 +1,4 @@
 node_modules/
 src/loggers_count.csv
+results.json
+scenarios.json
