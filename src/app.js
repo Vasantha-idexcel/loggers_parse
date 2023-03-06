@@ -5,8 +5,10 @@ const multi = require("multistream");
 const commandLineArgs = require("command-line-args");
 const optionDefinitions = [
   { name: "src", type: String, multiple: true, defaultOption: true },
+  { name: "defaults-provided", type: Boolean, multiple: false },
 ];
 const options = commandLineArgs(optionDefinitions);
+const provided = require("./data.json");
 
 var loader = null;
 var flag = true;
@@ -45,20 +47,43 @@ if (options["src"]) {
         value = _.concat(value, i[1]);
         hash[i[0]] = _.uniq(value);
       });
-      fs.writeFileSync(
-        "./src/loggers_count.csv",
-        `Scenario Code,Count,Sequences\n`
-      );
-      _.forEach(_.keys(hash), (i) => {
-        try {
-          fs.appendFileSync(
-            "./src/loggers_count.csv",
-            `"${i}",${hash[i].length},"${_.join(hash[i], ",")}"\n`
-          );
-        } catch (err) {
-          console.error(err);
-        }
-      });
+      if (options["defaults-provided"]) {
+        fs.writeFileSync(
+          "./src/loggers_count.csv",
+          `Scenario Code,Logged Count,Missed Count,Logged Sequences,Missed Sequences\n`
+        );
+        _.forEach(_.keys(hash), (i) => {
+          try {
+            const logged = hash[i];
+            const temp = _.map(provided[i], (i) => _.toString(i));
+            const missed = _.difference(temp, logged);
+            fs.appendFileSync(
+              "./src/loggers_count.csv",
+              `"${i}",${logged.length},${missed.length},"${_.join(
+                logged,
+                ","
+              )}","${_.join(missed, ",")}"\n`
+            );
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      } else {
+        fs.writeFileSync(
+          "./src/loggers_count.csv",
+          `Scenario Code,Count,Sequences\n`
+        );
+        _.forEach(_.keys(hash), (i) => {
+          try {
+            fs.appendFileSync(
+              "./src/loggers_count.csv",
+              `"${i}",${hash[i].length},"${_.join(hash[i], ",")}"\n`
+            );
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      }
       clearInterval(loader);
       console.log(`File generated at - ${__dirname}/loggers_count.csv`);
     });
