@@ -26,38 +26,37 @@ if (options["src"]) {
   fs.createReadStream(options["src"])
     .pipe(csv())
     .on("data", (data) => {
-      result.push(data["scenario_code"]);
+      result.push([data["scenario_code"], data["sequence"]]);
       spinner();
     })
     .on("end", () => {
       clearInterval(loader);
       console.log();
-      console.log();
-      result = _.uniq(result);
-      _.each({ AFU: 316, MAP: 136, ADD: 21 }, (v, k) => {
-        console.log(k);
-        console.log();
-        let afu = _.filter(result, (i) => _.startsWith(i, k));
-        afu = _.map(afu, (i) => _.toNumber(_.last(_.split(i, "-"))));
-        afu = afu.sort();
-        console.log(`Total Scenarios  - ${v}`);
-        console.log(`Logged Scenarios - ${afu.length}`);
-        console.log(`Missed Scenarios - ${v - afu.length}`);
-        console.log();
-        let logged = _.map(
-          afu,
-          (i) => `${k}-${i < 10 ? "0" + i.toString() : i.toString()}`
-        );
-        console.log(`Logged Scenarios - ${logged}`);
-        console.log();
-        let missed = _.filter(_.range(1, v + 1), (i) => !_.includes(afu, i));
-        missed = _.map(
-          missed,
-          (i) => `${k}-${i < 10 ? "0" + i.toString() : i.toString()}`
-        );
-        console.log(`Missed Scenarios - ${missed}`);
-        console.log();
+      let hash = {};
+      let value;
+      _.forEach(result, (i) => {
+        if (!_.includes(_.keys(hash), i[0])) {
+          hash[i[0]] = [];
+        }
+        value = hash[i[0]];
+        value = _.concat(value, i[1]);
+        hash[i[0]] = _.uniq(value);
       });
+      fs.writeFileSync(
+        "./src/loggers_count.csv",
+        `Scenario Code,Count,Sequences\n`
+      );
+      _.forEach(_.keys(hash), (i) => {
+        try {
+          fs.appendFileSync(
+            "./src/loggers_count.csv",
+            `${i},${hash[i].length},"${_.join(hash[i], ",")}"\n`
+          );
+        } catch (err) {
+          console.error(err);
+        }
+      });
+      console.log(`File generated at - ${__dirname}/loggers_count.csv`);
     });
 } else {
   console.log("Please provide a path for csv file to parse...");
