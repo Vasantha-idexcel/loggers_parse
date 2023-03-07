@@ -6,6 +6,7 @@ const commandLineArgs = require("command-line-args");
 const optionDefinitions = [
   { name: "src", type: String, multiple: true, defaultOption: true },
   { name: "defaults", type: Boolean, multiple: false },
+  { name: "file", type: String, multiple: false },
 ];
 const options = commandLineArgs(optionDefinitions);
 const path = require("path");
@@ -32,11 +33,7 @@ function spinner() {
   }
 }
 
-let result = [];
-if (options["src"]) {
-  const streams = _.map(options["src"], (i) => {
-    return fs.createReadStream(i);
-  });
+function readFiles(streams) {
   new multi(streams)
     .pipe(csv())
     .on("data", (data) => {
@@ -92,6 +89,23 @@ if (options["src"]) {
       const pathName = path.join(__dirname, "../results.json");
       console.log(`File generated at - ${pathName}`);
     });
+}
+
+let result = [];
+if (options["src"]) {
+  const streams = _.map(options["src"], (i) => {
+    return fs.createReadStream(i);
+  });
+  readFiles(streams);
 } else {
-  console.log("Please provide a path for csv file to parse...");
+  if (options["file"]) {
+    const files = fs.readdirSync(options["file"]);
+    const streams = _.map(files, (i) => {
+      const temp = path.join(options["file"], i);
+      return fs.createReadStream(temp);
+    });
+    readFiles(streams);
+  } else {
+    console.log("Please provide a path for csv file to parse...");
+  }
 }
