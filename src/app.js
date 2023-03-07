@@ -10,8 +10,12 @@ const optionDefinitions = [
 const options = commandLineArgs(optionDefinitions);
 const path = require("path");
 let provided = false;
+let provided_count = 0;
 try {
   provided = require("../scenarios.json");
+  _.keys(provided).forEach((i) => {
+    provided_count += provided[i].length;
+  });
 } catch {}
 
 var loader = null;
@@ -52,24 +56,24 @@ if (options["src"]) {
         hash[i[0]] = _.uniq(value);
       });
       if (options["defaults"] && provided) {
+        let hash_prev = hash;
+        hash = {};
         let total = 0;
-        let total_missed = 0;
-        _.forEach(_.keys(hash), (i) => {
-          const logged = hash[i];
-          const temp = _.map(provided[i], (i) => _.toString(i));
-          const missed = _.difference(temp, logged);
-          hash[i] = {
-            count: logged.length,
-            sequences: logged.sort(),
-            missed_count: missed.length,
-            missed_sequences: missed.sort(),
-          };
-          total += logged.length;
-          total_missed += missed.length;
+        _.forEach(_.keys(hash_prev), (i) => {
+          if (_.keys(provided).includes(i)) {
+            const logged = hash_prev[i];
+            const temp = _.map(provided[i], (i) => _.toString(i));
+            const missed = _.difference(temp, logged);
+            hash[i] = {
+              logged: logged.length,
+              missed: missed.length,
+            };
+            total += logged.length;
+          }
         });
         hash["total"] = {
           logged: total,
-          missed: total_missed,
+          missed: provided_count - total,
         };
       } else {
         let total = 0;
