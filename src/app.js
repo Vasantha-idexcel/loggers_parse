@@ -56,18 +56,30 @@ function readFiles(streams) {
         let hash_prev = hash;
         hash = {};
         let total = 0;
-        _.forEach(_.keys(hash_prev), (i) => {
-          if (_.keys(provided).includes(i)) {
-            const logged = hash_prev[i];
-            const temp = _.map(provided[i], (i) => _.toString(i));
-            const missed = _.difference(temp, logged);
-            hash[i] = {
-              logged: logged.length,
-              missed: missed.length,
-            };
-            total += logged.length;
-          }
-        });
+        // _.forEach(_.keys(hash_prev), (i) => {
+        //   if (_.keys(provided).includes(i)) {
+        //     const logged = hash_prev[i];
+        //     const temp = _.map(provided[i], (i) => _.toString(i));
+        //     const missed = _.difference(temp, logged);
+        //     hash[i] = {
+        //       logged: logged.length,
+        //       missed: missed.length,
+        //     };
+        //     total += logged.length;
+        //   }
+        // });
+        _.forEach(_.keys(provided), i => {
+          const logged = hash_prev[i] || [];
+          const temp = _.map(provided[i], (i) => _.toString(i));
+          const missed = _.difference(temp, logged);
+          hash[i] = {
+            logged: logged.length,
+            missed: missed.length,
+            sequences: logged,
+            missed_sequences: missed,
+          };
+          total += logged.length;
+        })
         hash["total"] = {
           logged: total,
           missed: provided_count - total,
