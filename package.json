@@ -4,7 +4,8 @@
   "main": "arc/app.js",
   "license": "MIT",
   "scripts": {
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "csv": "node src/index.js"
   },
   "dependencies": {
     "command-line-args": "^5.2.1",
