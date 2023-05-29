@@ -9,7 +9,7 @@ try {
   });
 } catch {}
 const logged = require("../results.json");
-let data = "Si No,Scenario Code,Sequence,Logged\n";
+let data = "Si No,Scenario Code,Sequence,Count\n";
 let serial = 1;
 
 _.forEach(logged, (value, key) => {
@@ -21,13 +21,15 @@ _.forEach(logged, (value, key) => {
     );
     list = _.map(list, (i) => _.toString(i));
     _.forEach(list, (i) => {
-      if (_.includes(value.sequences, i)) {
-        data += `${serial},${key},${i},Yes\n`;
-        serial += 1;
-      } else {
-        data += `${serial},${key},${i},\n`;
-        serial += 1;
-      }
+      // if (_.includes(value.sequences, i)) {
+      //   data += `${serial},${key},${i},Yes\n`;
+      //   serial += 1;
+      // } else {
+      //   data += `${serial},${key},${i},\n`;
+      //   serial += 1;
+      // }
+      data += `${serial},${key},${i},${value.count[i] || 0}\n`;
+      serial += 1;
     });
   }
 });
