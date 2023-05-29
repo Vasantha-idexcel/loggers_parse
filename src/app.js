@@ -50,7 +50,7 @@ function readFiles(streams) {
         }
         value = hash[i[0]];
         value = _.concat(value, i[1]);
-        hash[i[0]] = _.uniq(value);
+        hash[i[0]] = value;
       });
       if (options["defaults"] && provided) {
         let hash_prev = hash;
@@ -68,18 +68,23 @@ function readFiles(streams) {
         //     total += logged.length;
         //   }
         // });
-        _.forEach(_.keys(provided), i => {
+        _.forEach(_.keys(provided), (i) => {
           const logged = hash_prev[i] || [];
+          const logged_uniq = _.uniq(logged);
           const temp = _.map(provided[i], (i) => _.toString(i));
-          const missed = _.difference(temp, logged);
+          const missed = _.difference(temp, logged_uniq);
           hash[i] = {
-            logged: logged.length,
+            logged: logged_uniq.length,
             missed: missed.length,
-            sequences: logged,
+            sequences: logged_uniq,
             missed_sequences: missed,
+            count: {},
           };
-          total += logged.length;
-        })
+          _.forEach(logged_uniq, (j) => {
+            hash[i]["count"][j] = _.filter(logged, (k) => k === j).length;
+          });
+          total += logged_uniq.length;
+        });
         hash["total"] = {
           logged: total,
           missed: provided_count - total,
